@@ -1,5 +1,5 @@
 #[derive(Debug)]
-pub enum PokeapiError {
+pub enum TranslatorError {
     UrlParse {
         message: String,
     },
@@ -9,7 +9,7 @@ pub enum PokeapiError {
     },
 }
 
-impl std::fmt::Display for PokeapiError {
+impl std::fmt::Display for TranslatorError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::UrlParse { message } => writeln!(f, "{}", message),
@@ -27,9 +27,9 @@ impl std::fmt::Display for PokeapiError {
     }
 }
 
-impl std::error::Error for PokeapiError {}
+impl std::error::Error for TranslatorError {}
 
-impl From<url::ParseError> for PokeapiError {
+impl From<url::ParseError> for TranslatorError {
     fn from(err: url::ParseError) -> Self {
         Self::UrlParse {
             message: err.to_string(),
@@ -37,7 +37,7 @@ impl From<url::ParseError> for PokeapiError {
     }
 }
 
-impl From<reqwest::Error> for PokeapiError {
+impl From<reqwest::Error> for TranslatorError {
     fn from(err: reqwest::Error) -> Self {
         Self::Api {
             status_code: err.status(),

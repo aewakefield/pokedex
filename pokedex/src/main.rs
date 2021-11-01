@@ -9,8 +9,9 @@ async fn main() {
     let addr = ([0, 0, 0, 0], 5000);
 
     let pokeapi_url = "https://pokeapi.co/api/v2/";
+    let translator_url = "https://api.funtranslations.com/translate/";
 
-    let (addr, server) = run(addr, pokeapi_url);
+    let (addr, server) = run(addr, pokeapi_url, translator_url);
 
     tracing::info!("starting at address {}", addr);
 
