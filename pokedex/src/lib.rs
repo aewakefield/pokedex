@@ -15,11 +15,15 @@ pub fn run(
         .and(warp::get())
         .and(warp::any().map(move || pokeapi.clone()))
         .and_then(info)
-        .recover(handle_rejection);
+        .recover(handle_rejection)
+        .with(warp::trace::named("pokemon"));
 
-    warp::serve(pokemon).bind_ephemeral(addr)
+    let routes = pokemon.with(warp::trace::request());
+
+    warp::serve(routes).bind_ephemeral(addr)
 }
 
+#[tracing::instrument]
 async fn info(pokemon_name: String, pokeapi: Pokeapi) -> Result<impl warp::Reply, Rejection> {
     let info = pokeapi.info(&pokemon_name).await;
 

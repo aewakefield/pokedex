@@ -9,7 +9,7 @@ use pokeapi_models::{
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Pokeapi {
     client: reqwest::Client,
     base_url: reqwest::Url,
@@ -25,6 +25,7 @@ impl Pokeapi {
         })
     }
 
+    #[tracing::instrument]
     pub async fn info(&self, pokemon_name: &str) -> Result<PokemonInfo, PokeapiError> {
         let pokemon = self.get_pokemon(pokemon_name).await?;
         let species = self.get_species(&pokemon).await?;
@@ -39,6 +40,7 @@ impl Pokeapi {
         Ok(info)
     }
 
+    #[tracing::instrument]
     async fn get_pokemon(&self, pokemon_name: &str) -> Result<Pokemon, PokeapiError> {
         let url = self.base_url.join(&format!("pokemon/{}", pokemon_name))?;
         let pokemon: Pokemon = self.client.get(url).send().await?.json().await?;
@@ -46,6 +48,7 @@ impl Pokeapi {
         Ok(pokemon)
     }
 
+    #[tracing::instrument]
     async fn get_species(&self, pokemon: &Pokemon) -> Result<PokemonSpecies, PokeapiError> {
         let url = &pokemon.species.url;
         let species: PokemonSpecies = self.client.get(url).send().await?.json().await?;
@@ -54,6 +57,7 @@ impl Pokeapi {
     }
 }
 
+#[tracing::instrument]
 fn get_description(flavor_text: Vec<FlavorText>) -> Option<String> {
     flavor_text
         .into_iter()
