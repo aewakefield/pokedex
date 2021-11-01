@@ -66,6 +66,7 @@ fn get_description(flavor_text: Vec<FlavorText>) -> Option<String> {
 }
 
 #[derive(Deserialize, Serialize, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct PokemonInfo {
     pub name: String,
     pub description: Option<String>,
