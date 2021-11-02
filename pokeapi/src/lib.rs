@@ -26,26 +26,34 @@ impl Pokeapi {
     }
 
     #[tracing::instrument]
-    pub async fn info(&self, pokemon_name: &str) -> Result<PokemonInfo, PokeapiError> {
-        let pokemon = self.get_pokemon(pokemon_name).await?;
-        let species = self.get_species(&pokemon).await?;
+    pub async fn info(&self, pokemon_name: &str) -> Result<Option<PokemonInfo>, PokeapiError> {
+        if let Some(pokemon) = self.get_pokemon(pokemon_name).await? {
+            let species = self.get_species(&pokemon).await?;
 
-        let info = PokemonInfo {
-            name: species.name,
-            description: get_description(species.flavor_text_entries),
-            habitat: species.habitat.name,
-            is_legendary: species.is_legendary,
-        };
+            let info = PokemonInfo {
+                name: species.name,
+                description: get_description(species.flavor_text_entries),
+                habitat: species.habitat.name,
+                is_legendary: species.is_legendary,
+            };
 
-        Ok(info)
+            Ok(Some(info))
+        } else {
+            Ok(None)
+        }
     }
 
     #[tracing::instrument]
-    async fn get_pokemon(&self, pokemon_name: &str) -> Result<Pokemon, PokeapiError> {
+    async fn get_pokemon(&self, pokemon_name: &str) -> Result<Option<Pokemon>, PokeapiError> {
         let url = self.base_url.join(&format!("pokemon/{}", pokemon_name))?;
-        let pokemon: Pokemon = self.client.get(url).send().await?.json().await?;
+        let response = self.client.get(url).send().await?;
+        if response.status() == reqwest::StatusCode::NOT_FOUND {
+            Ok(None)
+        } else {
+            let pokemon: Pokemon = response.json().await?;
 
-        Ok(pokemon)
+            Ok(Some(pokemon))
+        }
     }
 
     #[tracing::instrument]

@@ -4,7 +4,7 @@ use translator::{Translator, TranslatorError};
 use core::future::Future;
 use serde::Serialize;
 use std::net::SocketAddr;
-use warp::{http::StatusCode, Filter, Rejection, Reply};
+use warp::{http::StatusCode, reply::Response, Filter, Rejection, Reply};
 
 pub fn run(
     addr: impl Into<SocketAddr> + 'static,
@@ -36,11 +36,12 @@ pub fn run(
 }
 
 #[tracing::instrument]
-async fn info(pokemon_name: String, pokeapi: Pokeapi) -> Result<impl Reply, Rejection> {
+async fn info(pokemon_name: String, pokeapi: Pokeapi) -> Result<Response, Rejection> {
     let info = pokeapi.info(&pokemon_name).await;
 
     match info {
-        Ok(info) => Ok(warp::reply::json(&info)),
+        Ok(Some(info)) => Ok(warp::reply::json(&info).into_response()),
+        Ok(None) => Ok(StatusCode::NOT_FOUND.into_response()),
         Err(err) => Err(warp::reject::custom(PokeapiRejection::from(err))),
     }
 }
@@ -50,18 +51,19 @@ async fn translated(
     pokemon_name: String,
     pokeapi: Pokeapi,
     translator: Translator,
-) -> Result<impl Reply, Rejection> {
+) -> Result<Response, Rejection> {
     let info = pokeapi.info(&pokemon_name).await;
 
     let info = match info {
-        Ok(info) => info,
+        Ok(Some(info)) => info,
+        Ok(None) => return Ok(StatusCode::NOT_FOUND.into_response()),
         Err(err) => return Err(warp::reject::custom(PokeapiRejection::from(err))),
     };
 
     let translated = translate_info(info, &translator).await;
 
     match translated {
-        Ok(translated) => Ok(warp::reply::json(&translated)),
+        Ok(translated) => Ok(warp::reply::json(&translated).into_response()),
         Err(err) => Err(warp::reject::custom(TranslatorRejection::from(err))),
     }
 }

@@ -11,11 +11,13 @@ WORKDIR /app
 
 RUN cargo new pokedex
 RUN cargo new pokeapi
+RUN cargo new translator
 
 COPY ./Cargo.lock .
 COPY ./Cargo.toml .
 COPY ./pokedex/Cargo.toml ./pokedex/
 COPY ./pokeapi/Cargo.toml ./pokeapi/
+COPY ./translator/Cargo.toml ./translator/
 
 RUN cargo build --release --bin pokedex
 
